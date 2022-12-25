@@ -1,0 +1,135 @@
+<head>
+  <meta charset="utf-8" />
+  <title>가3 MBTI</title>
+  <meta name="description" content="" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" type="text/css" href="./common.css" />
+  <link rel="stylesheet" type="text/css" href="./font.css" />
+
+  <script src="//unpkg.com/three"></script>
+  <script src="//unpkg.com/force-graph"></script>
+
+  <!--<script src="../../dist/three-forcegraph.js"></script>-->
+</head>
+
+<body>
+  <div id="graph"></div>
+
+  <script>
+    // Gen random data
+
+    const mbti_types = [
+      "ISTJ",
+      "ISTP",
+      "ISFJ",
+      "ISFP",
+      "INTJ",
+      "INTP",
+      "INFJ",
+      "INFP",
+      "ESTJ",
+      "ESTP",
+      "ESFJ",
+      "ESFP",
+      "ENTJ",
+      "ENTP",
+      "ENFJ",
+      "ENFP",
+    ];
+
+    const member_data = [
+      { name: "김재영", val: "INFP" },
+      { name: "정문정", val: "ESTJ" },
+      { name: "송인철", val: "ENFP" },
+      { name: "박보현", val: "ISTP" },
+      { name: "문선영", val: "ESFJ" },
+      { name: "양현지", val: "ESFJ" },
+      { name: "차유미", val: "ESFJ" },
+      { name: "김남희", val: "ESTP" },
+      { name: "조정열", val: "INFJ" },
+      { name: "김태형", val: "INTJ" },
+      { name: "김덕진", val: "ISFP" },
+      { name: "한상우", val: "INFJ" },
+      { name: "차영범", val: "INFJ" },
+      { name: "류현아", val: "ENFP" },
+      { name: "박애란", val: "ISFJ" },
+      { name: "박종훈", val: "ISTP" },
+      { name: "이재홍", val: "INFP" },
+      { name: "소희수", val: "ISTJ" },
+      { name: "이영재", val: "INFP" },
+      { name: "김주영", val: "ENFP" },
+      { name: "오정희", val: "ISTJ" },
+      { name: "이소봉", val: "ISFP" },
+      { name: "정지우", val: "INFJ" },
+    ];
+
+    const gData = {
+      nodes: [
+        {
+          id: "MBTI",
+          name: "MBTI",
+          level: 1,
+        },
+        ...mbti_types.map((type) => {
+          return { id: type, name: type, level: 2 };
+        }),
+        ...member_data.map((member) => {
+          return { id: member.name, name: member.name, level: 3 };
+        }),
+      ],
+      links: [
+        ...mbti_types.map((type) => {
+          return { source: "MBTI", target: type };
+        }),
+        ...member_data.map((member) => {
+          return { source: member.val, target: member.name };
+        }),
+      ],
+    };
+
+    const Graph = ForceGraph()(document.getElementById("graph"));
+    Graph.d3Force("link").distance(40);
+
+    Graph.graphData(gData)
+      .nodeId("id")
+      .nodeAutoColorBy("level")
+      .nodeCanvasObject((node, ctx, globalScale) => {
+        const label = node.id;
+        const fontSize = 14 / globalScale;
+        ctx.font = `${fontSize}px Spoqa Han Sans Neo`;
+        const textWidth = ctx.measureText(label).width;
+        const bckgDimensions = [textWidth, fontSize].map(
+          (n) => n + fontSize * 0.5
+        ); // some padding
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${
+          node.level === 1 ? "0.8" : "0"
+        })`;
+        ctx.fillRect(
+          node.x - bckgDimensions[0] / 2,
+          node.y - bckgDimensions[1] / 2,
+          ...bckgDimensions
+        );
+
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = node.color;
+        ctx.fillText(label, node.x, node.y);
+
+        node.__bckgDimensions = bckgDimensions; // to re-use in nodePointerAreaPaint
+
+        // add ring just for highlighted nodes
+      })
+      .nodePointerAreaPaint((node, color, ctx) => {
+        ctx.fillStyle = color;
+        const bckgDimensions = node.__bckgDimensions;
+        bckgDimensions &&
+          ctx.fillRect(
+            node.x - bckgDimensions[0] / 2,
+            node.y - bckgDimensions[1] / 2,
+            ...bckgDimensions
+          );
+      });
+  </script>
+</body>
